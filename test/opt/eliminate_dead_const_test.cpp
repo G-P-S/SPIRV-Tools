@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "assembly_builder.h"
-#include "pass_fixture.h"
-#include "pass_utils.h"
-
 #include <algorithm>
 #include <cstdarg>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <unordered_set>
+#include <vector>
+
+#include "test/opt/assembly_builder.h"
+#include "test/opt/pass_fixture.h"
+#include "test/opt/pass_utils.h"
 
 namespace spvtools {
 namespace opt {
@@ -195,7 +197,7 @@ TEST_P(EliminateDeadConstantTest, Custom) {
       assembly_with_dead_const, expected, /*  skip_nop = */ true);
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     ScalarTypeConstants, EliminateDeadConstantTest,
     ::testing::ValuesIn(std::vector<EliminateDeadConstantTestCase>({
         // clang-format off
@@ -263,7 +265,7 @@ INSTANTIATE_TEST_CASE_P(
         // clang-format on
     })));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     VectorTypeConstants, EliminateDeadConstantTest,
     ::testing::ValuesIn(std::vector<EliminateDeadConstantTestCase>({
         // clang-format off
@@ -356,7 +358,7 @@ INSTANTIATE_TEST_CASE_P(
         // clang-format on
     })));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     StructTypeConstants, EliminateDeadConstantTest,
     ::testing::ValuesIn(std::vector<EliminateDeadConstantTestCase>({
         // clang-format off
@@ -483,7 +485,7 @@ INSTANTIATE_TEST_CASE_P(
         // clang-format on
     })));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     ScalarTypeSpecConstants, EliminateDeadConstantTest,
     ::testing::ValuesIn(std::vector<EliminateDeadConstantTestCase>({
         // clang-format off
@@ -520,7 +522,7 @@ INSTANTIATE_TEST_CASE_P(
         // clang-format on
     })));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     VectorTypeSpecConstants, EliminateDeadConstantTest,
     ::testing::ValuesIn(std::vector<EliminateDeadConstantTestCase>({
         // clang-format off
@@ -615,7 +617,7 @@ INSTANTIATE_TEST_CASE_P(
         // clang-format on
     })));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SpecConstantOp, EliminateDeadConstantTest,
     ::testing::ValuesIn(std::vector<EliminateDeadConstantTestCase>({
         // clang-format off
@@ -766,7 +768,7 @@ INSTANTIATE_TEST_CASE_P(
         // clang-format on
     })));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     LongDefUseChain, EliminateDeadConstantTest,
     ::testing::ValuesIn(std::vector<EliminateDeadConstantTestCase>({
         // clang-format off

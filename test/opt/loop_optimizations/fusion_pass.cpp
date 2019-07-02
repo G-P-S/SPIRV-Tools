@@ -12,21 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gmock/gmock.h>
+#include <string>
 
-#ifdef SPIRV_EFFCEE
 #include "effcee/effcee.h"
-#endif
-
-#include "../pass_fixture.h"
+#include "gmock/gmock.h"
+#include "test/opt/pass_fixture.h"
 
 namespace spvtools {
 namespace opt {
 namespace {
 
 using FusionPassTest = PassTest<::testing::Test>;
-
-#ifdef SPIRV_EFFCEE
 
 /*
 Generated from the following GLSL + --eliminate-local-multi-store
@@ -715,8 +711,6 @@ TEST_F(FusionPassTest, TooManyRegisters) {
 
   SinglePassRunAndMatch<LoopFusionPass>(text, true, 5);
 }
-
-#endif
 
 }  // namespace
 }  // namespace opt

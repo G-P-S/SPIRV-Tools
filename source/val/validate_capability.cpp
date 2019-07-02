@@ -17,6 +17,7 @@
 #include "source/val/validate.h"
 
 #include <cassert>
+#include <string>
 #include <unordered_set>
 
 #include "source/diagnostic.h"
@@ -82,6 +83,11 @@ bool IsSupportOptionalVulkan_1_0(uint32_t capability) {
     case SpvCapabilityStorageImageReadWithoutFormat:
     case SpvCapabilityStorageImageWriteWithoutFormat:
     case SpvCapabilityMultiViewport:
+    case SpvCapabilityInt64Atomics:
+    case SpvCapabilityTransformFeedback:
+    case SpvCapabilityGeometryStreams:
+    case SpvCapabilityFloat16:
+    case SpvCapabilityInt8:
       return true;
   }
   return false;
@@ -216,6 +222,19 @@ bool IsEnabledByCapabilityOpenCL_2_0(ValidationState_t& _,
   return false;
 }
 
+bool IsSupportGuaranteedWebGPU(uint32_t capability) {
+  switch (capability) {
+    case SpvCapabilityMatrix:
+    case SpvCapabilityShader:
+    case SpvCapabilitySampled1D:
+    case SpvCapabilityImage1D:
+    case SpvCapabilityDerivativeControl:
+    case SpvCapabilityImageQuery:
+      return true;
+  }
+  return false;
+}
+
 }  // namespace
 
 // Validates that capability declarations use operands allowed in the current
@@ -298,6 +317,14 @@ spv_result_t CapabilityPass(ValidationState_t& _, const Instruction* inst) {
              << " is not allowed by OpenCL 2.2 " << opencl_profile
              << " Profile specification"
              << " (or requires extension or capability)";
+    }
+  } else if (env == SPV_ENV_WEBGPU_0) {
+    if (!IsSupportGuaranteedWebGPU(capability) &&
+        !IsEnabledByExtension(_, capability)) {
+      return _.diag(SPV_ERROR_INVALID_CAPABILITY, inst)
+             << "Capability " << capability_str()
+             << " is not allowed by WebGPU specification"
+             << " (or requires extension)";
     }
   }
 

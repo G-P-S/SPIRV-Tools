@@ -16,8 +16,8 @@
 #include <string>
 
 #include "gmock/gmock.h"
-#include "unit_spirv.h"
-#include "val_fixtures.h"
+#include "test/unit_spirv.h"
+#include "test/val/val_fixtures.h"
 
 namespace spvtools {
 namespace val {
@@ -37,6 +37,10 @@ std::string GenerateShaderCode(
   ss << capabilities_and_extensions << "\n";
   ss << "OpMemoryModel Logical GLSL450\n";
   ss << "OpEntryPoint " << execution_model << " %main \"main\"\n";
+  if (execution_model == "Geometry") {
+    ss << "OpExecutionMode %main InputPoints\n";
+    ss << "OpExecutionMode %main OutputPoints\n";
+  }
 
   ss << R"(
 %void = OpTypeVoid

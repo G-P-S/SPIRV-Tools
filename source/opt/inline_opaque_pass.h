@@ -23,9 +23,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "def_use_manager.h"
-#include "inline_pass.h"
-#include "module.h"
+#include "source/opt/def_use_manager.h"
+#include "source/opt/inline_pass.h"
+#include "source/opt/module.h"
 
 namespace spvtools {
 namespace opt {
@@ -48,7 +48,7 @@ class InlineOpaquePass : public InlinePass {
   // Inline all function calls in |func| that have opaque params or return
   // type. Inline similarly all code that is inlined into func. Return true
   // if func is modified.
-  bool InlineOpaque(Function* func);
+  Status InlineOpaque(Function* func);
 
   void Initialize();
   Pass::Status ProcessImpl();

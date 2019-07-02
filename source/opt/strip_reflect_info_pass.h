@@ -15,9 +15,9 @@
 #ifndef SOURCE_OPT_STRIP_REFLECT_INFO_PASS_H_
 #define SOURCE_OPT_STRIP_REFLECT_INFO_PASS_H_
 
-#include "ir_context.h"
-#include "module.h"
-#include "pass.h"
+#include "source/opt/ir_context.h"
+#include "source/opt/module.h"
+#include "source/opt/pass.h"
 
 namespace spvtools {
 namespace opt {
@@ -33,7 +33,8 @@ class StripReflectInfoPass : public Pass {
     return IRContext::kAnalysisInstrToBlockMapping |
            IRContext::kAnalysisCombinators | IRContext::kAnalysisCFG |
            IRContext::kAnalysisDominatorAnalysis |
-           IRContext::kAnalysisLoopAnalysis | IRContext::kAnalysisNameMap;
+           IRContext::kAnalysisLoopAnalysis | IRContext::kAnalysisNameMap |
+           IRContext::kAnalysisConstants | IRContext::kAnalysisTypes;
   }
 };
 

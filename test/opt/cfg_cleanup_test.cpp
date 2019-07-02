@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pass_fixture.h"
-#include "pass_utils.h"
+#include <string>
+
+#include "test/opt/pass_fixture.h"
+#include "test/opt/pass_utils.h"
 
 namespace spvtools {
 namespace opt {
@@ -89,6 +91,7 @@ TEST_F(CFGCleanupTest, RemoveDecorations) {
                   %1 = OpExtInstImport "GLSL.std.450"
                        OpMemoryModel Logical GLSL450
                        OpEntryPoint Fragment %main "main"
+                       OpExecutionMode %main OriginUpperLeft
                        OpName %main "main"
                        OpName %x "x"
                        OpName %dead "dead"
@@ -121,6 +124,7 @@ TEST_F(CFGCleanupTest, RemoveDecorations) {
 %1 = OpExtInstImport "GLSL.std.450"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main"
+OpExecutionMode %main OriginUpperLeft
 OpName %main "main"
 OpName %x "x"
 OpDecorate %x RelaxedPrecision
@@ -151,6 +155,7 @@ TEST_F(CFGCleanupTest, UpdatePhis) {
           %1 = OpExtInstImport "GLSL.std.450"
                OpMemoryModel Logical GLSL450
                OpEntryPoint Fragment %main "main" %y %outparm
+               OpExecutionMode %main OriginUpperLeft
                OpName %main "main"
                OpName %y "y"
                OpName %outparm "outparm"
@@ -192,6 +197,7 @@ TEST_F(CFGCleanupTest, UpdatePhis) {
 %1 = OpExtInstImport "GLSL.std.450"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main" %y %outparm
+OpExecutionMode %main OriginUpperLeft
 OpName %main "main"
 OpName %y "y"
 OpName %outparm "outparm"
@@ -270,6 +276,7 @@ TEST_F(CFGCleanupTest, RemovePhiArgsFromFarBlocks) {
           %1 = OpExtInstImport "GLSL.std.450"
                OpMemoryModel Logical GLSL450
                OpEntryPoint Fragment %main "main" %y %outparm
+               OpExecutionMode %main OriginUpperLeft
                OpName %main "main"
                OpName %y "y"
                OpName %outparm "outparm"
@@ -317,6 +324,7 @@ TEST_F(CFGCleanupTest, RemovePhiArgsFromFarBlocks) {
 %1 = OpExtInstImport "GLSL.std.450"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main" %y %outparm
+OpExecutionMode %main OriginUpperLeft
 OpName %main "main"
 OpName %y "y"
 OpName %outparm "outparm"
@@ -368,6 +376,7 @@ TEST_F(CFGCleanupTest, RemovePhiConstantArgs) {
           %1 = OpExtInstImport "GLSL.std.450"
                OpMemoryModel Logical GLSL450
                OpEntryPoint Fragment %main "main" %y %outparm
+               OpExecutionMode %main OriginUpperLeft
                OpName %main "main"
                OpName %y "y"
                OpName %outparm "outparm"
@@ -408,6 +417,7 @@ TEST_F(CFGCleanupTest, RemovePhiConstantArgs) {
 %1 = OpExtInstImport "GLSL.std.450"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main" %y %outparm
+OpExecutionMode %main OriginUpperLeft
 OpName %main "main"
 OpName %y "y"
 OpName %outparm "outparm"

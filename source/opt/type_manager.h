@@ -18,11 +18,12 @@
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
-#include "module.h"
+#include "source/opt/module.h"
+#include "source/opt/types.h"
 #include "spirv-tools/libspirv.hpp"
-#include "types.h"
 
 namespace spvtools {
 namespace opt {
@@ -208,6 +209,8 @@ class TypeManager {
 
   IdToTypeMap id_to_incomplete_type_;  // Maps ids to their type representations
                                        // for incomplete types.
+
+  std::unordered_map<uint32_t, const Instruction*> id_to_constant_inst_;
 };
 
 }  // namespace analysis

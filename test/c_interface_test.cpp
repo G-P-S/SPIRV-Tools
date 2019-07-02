@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gtest/gtest.h>
-
-#include "message.h"
+#include "gtest/gtest.h"
+#include "source/table.h"
 #include "spirv-tools/libspirv.h"
-#include "table.h"
 
 namespace spvtools {
 namespace {
@@ -152,7 +150,7 @@ TEST(CInterface, SpecifyConsumerNullDiagnosticForDisassembling) {
         EXPECT_STREQ("input", source);
         EXPECT_EQ(0u, position.line);
         EXPECT_EQ(0u, position.column);
-        EXPECT_EQ(5u, position.index);
+        EXPECT_EQ(1u, position.index);
         EXPECT_STREQ("Invalid opcode: 65535", message);
       });
 

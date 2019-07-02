@@ -16,13 +16,16 @@
 //
 //      Constant propagation with conditional branches,
 //      Wegman and Zadeck, ACM TOPLAS 13(2):181-210.
-#include "ccp_pass.h"
-#include "fold.h"
-#include "function.h"
-#include "module.h"
-#include "propagator.h"
+
+#include "source/opt/ccp_pass.h"
 
 #include <algorithm>
+#include <limits>
+
+#include "source/opt/fold.h"
+#include "source/opt/function.h"
+#include "source/opt/module.h"
+#include "source/opt/propagator.h"
 
 namespace spvtools {
 namespace opt {
@@ -268,6 +271,7 @@ bool CCPPass::ReplaceValues() {
     uint32_t id = it.first;
     uint32_t cst_id = it.second;
     if (!IsVaryingValue(cst_id) && id != cst_id) {
+      context()->KillNamesAndDecorates(id);
       retval |= context()->ReplaceAllUsesWith(id, cst_id);
     }
   }
@@ -316,7 +320,7 @@ Pass::Status CCPPass::Process() {
 
   // Process all entry point functions.
   ProcessFunction pfn = [this](Function* fp) { return PropagateConstants(fp); };
-  bool modified = ProcessReachableCallTree(pfn, context());
+  bool modified = context()->ProcessReachableCallTree(pfn);
   return modified ? Pass::Status::SuccessWithChange
                   : Pass::Status::SuccessWithoutChange;
 }

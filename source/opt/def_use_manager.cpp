@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "def_use_manager.h"
+#include "source/opt/def_use_manager.h"
 
 #include <iostream>
 
-#include "log.h"
-#include "reflect.h"
+#include "source/opt/log.h"
+#include "source/opt/reflect.h"
 
 namespace spvtools {
 namespace opt {
@@ -278,7 +278,17 @@ bool operator==(const DefUseManager& lhs, const DefUseManager& rhs) {
     return false;
   }
 
-  if (lhs.inst_to_used_ids_ != lhs.inst_to_used_ids_) {
+  if (lhs.inst_to_used_ids_ != rhs.inst_to_used_ids_) {
+    for (auto p : lhs.inst_to_used_ids_) {
+      if (rhs.inst_to_used_ids_.count(p.first) == 0) {
+        return false;
+      }
+    }
+    for (auto p : rhs.inst_to_used_ids_) {
+      if (lhs.inst_to_used_ids_.count(p.first) == 0) {
+        return false;
+      }
+    }
     return false;
   }
   return true;

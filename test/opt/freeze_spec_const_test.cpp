@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pass_fixture.h"
-#include "pass_utils.h"
-
 #include <algorithm>
+#include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
+
+#include "test/opt/pass_fixture.h"
+#include "test/opt/pass_utils.h"
 
 namespace spvtools {
 namespace opt {
@@ -45,7 +47,7 @@ TEST_P(FreezeSpecConstantValueTypeTest, PrimaryType) {
 }
 
 // Test each primary type.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     PrimaryTypeSpecConst, FreezeSpecConstantValueTypeTest,
     ::testing::ValuesIn(std::vector<FreezeSpecConstantValueTypeTestCase>({
         // Type declaration, original spec constant definition, expected frozen

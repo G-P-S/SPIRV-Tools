@@ -14,38 +14,42 @@
 
 #include "spirv-tools/linker.hpp"
 
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
-
-#include <algorithm>
 #include <iostream>
+#include <memory>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
-#include "assembly_grammar.h"
-#include "diagnostic.h"
-#include "opt/build_module.h"
-#include "opt/compact_ids_pass.h"
-#include "opt/decoration_manager.h"
-#include "opt/ir_loader.h"
-#include "opt/make_unique.h"
-#include "opt/pass_manager.h"
-#include "opt/remove_duplicates_pass.h"
+#include "source/assembly_grammar.h"
+#include "source/diagnostic.h"
+#include "source/opt/build_module.h"
+#include "source/opt/compact_ids_pass.h"
+#include "source/opt/decoration_manager.h"
+#include "source/opt/ir_loader.h"
+#include "source/opt/pass_manager.h"
+#include "source/opt/remove_duplicates_pass.h"
+#include "source/opt/type_manager.h"
+#include "source/spirv_target_env.h"
+#include "source/util/make_unique.h"
 #include "spirv-tools/libspirv.hpp"
-#include "spirv_target_env.h"
 
 namespace spvtools {
 namespace {
 
-using opt::IRContext;
 using opt::Instruction;
+using opt::IRContext;
 using opt::Module;
-using opt::Operand;
 using opt::PassManager;
 using opt::RemoveDuplicatesPass;
 using opt::analysis::DecorationManager;
 using opt::analysis::DefUseManager;
+using opt::analysis::Type;
+using opt::analysis::TypeManager;
 
 // Stores various information about an imported or exported symbol.
 struct LinkageSymbolInfo {
@@ -470,14 +474,15 @@ spv_result_t CheckImportExportCompatibility(const MessageConsumer& consumer,
                                             opt::IRContext* context) {
   spv_position_t position = {};
 
-  // Ensure th import and export types are the same.
-  const DefUseManager& def_use_manager = *context->get_def_use_mgr();
+  // Ensure the import and export types are the same.
   const DecorationManager& decoration_manager = *context->get_decoration_mgr();
+  const TypeManager& type_manager = *context->get_type_mgr();
   for (const auto& linking_entry : linkings_to_do) {
-    if (!RemoveDuplicatesPass::AreTypesEqual(
-            *def_use_manager.GetDef(linking_entry.imported_symbol.type_id),
-            *def_use_manager.GetDef(linking_entry.exported_symbol.type_id),
-            context))
+    Type* imported_symbol_type =
+        type_manager.GetType(linking_entry.imported_symbol.type_id);
+    Type* exported_symbol_type =
+        type_manager.GetType(linking_entry.exported_symbol.type_id);
+    if (!(*imported_symbol_type == *exported_symbol_type))
       return DiagnosticStream(position, consumer, "", SPV_ERROR_INVALID_BINARY)
              << "Type mismatch on symbol \""
              << linking_entry.imported_symbol.name

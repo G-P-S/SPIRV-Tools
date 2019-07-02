@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "val/function.h"
+#include "source/val/function.h"
 
 #include <cassert>
 
@@ -22,10 +22,10 @@
 #include <unordered_set>
 #include <utility>
 
-#include "cfa.h"
-#include "val/basic_block.h"
-#include "val/construct.h"
-#include "validate.h"
+#include "source/cfa.h"
+#include "source/val/basic_block.h"
+#include "source/val/construct.h"
+#include "source/val/validate.h"
 
 namespace spvtools {
 namespace val {
@@ -86,6 +86,12 @@ spv_result_t Function::RegisterLoopMerge(uint32_t merge_id,
   continue_construct.set_corresponding_constructs({&loop_construct});
   loop_construct.set_corresponding_constructs({&continue_construct});
   merge_block_header_[&merge_block] = current_block_;
+  if (continue_target_headers_.find(&continue_target_block) ==
+      continue_target_headers_.end()) {
+    continue_target_headers_[&continue_target_block] = {current_block_};
+  } else {
+    continue_target_headers_[&continue_target_block].push_back(current_block_);
+  }
 
   return SPV_SUCCESS;
 }
@@ -368,6 +374,30 @@ bool Function::IsCompatibleWithExecutionModel(SpvExecutionModel model,
   for (const auto& is_compatible : execution_model_limitations_) {
     std::string message;
     if (!is_compatible(model, &message)) {
+      if (!reason) return false;
+      return_value = false;
+      if (!message.empty()) {
+        ss_reason << message << "\n";
+      }
+    }
+  }
+
+  if (!return_value && reason) {
+    *reason = ss_reason.str();
+  }
+
+  return return_value;
+}
+
+bool Function::CheckLimitations(const ValidationState_t& _,
+                                const Function* entry_point,
+                                std::string* reason) const {
+  bool return_value = true;
+  std::stringstream ss_reason;
+
+  for (const auto& is_compatible : limitations_) {
+    std::string message;
+    if (!is_compatible(_, entry_point, &message)) {
       if (!reason) return false;
       return_value = false;
       if (!message.empty()) {

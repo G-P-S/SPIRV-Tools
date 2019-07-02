@@ -12,14 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "if_conversion.h"
+#include "source/opt/if_conversion.h"
 
-#include "value_number_table.h"
+#include <memory>
+#include <vector>
+
+#include "source/opt/value_number_table.h"
 
 namespace spvtools {
 namespace opt {
 
 Pass::Status IfConversion::Process() {
+  if (!context()->get_feature_mgr()->HasCapability(SpvCapabilityShader)) {
+    return Status::SuccessWithoutChange;
+  }
+
   const ValueNumberTable& vn_table = *context()->GetValueNumberTable();
   bool modified = false;
   std::vector<Instruction*> to_kill;
@@ -158,6 +165,9 @@ bool IfConversion::CheckBlock(BasicBlock* block, DominatorAnalysis* dominators,
   if (!*common || cfg()->IsPseudoEntryBlock(*common)) return false;
   Instruction* branch = (*common)->terminator();
   if (branch->opcode() != SpvOpBranchConditional) return false;
+  auto merge = (*common)->GetMergeInst();
+  if (!merge || merge->opcode() != SpvOpSelectionMerge) return false;
+  if ((*common)->MergeBlockIdIfAny() != block->id()) return false;
 
   return true;
 }

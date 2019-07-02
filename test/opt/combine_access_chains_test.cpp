@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "assembly_builder.h"
+#include <string>
+
 #include "gmock/gmock.h"
-#include "pass_fixture.h"
-#include "pass_utils.h"
+#include "test/opt/assembly_builder.h"
+#include "test/opt/pass_fixture.h"
+#include "test/opt/pass_utils.h"
 
 namespace spvtools {
 namespace opt {
@@ -23,7 +25,6 @@ namespace {
 
 using CombineAccessChainsTest = PassTest<::testing::Test>;
 
-#ifdef SPIRV_EFFCEE
 TEST_F(CombineAccessChainsTest, PtrAccessChainFromAccessChainConstant) {
   const std::string text = R"(
 ; CHECK: [[int:%\w+]] = OpTypeInt 32 0
@@ -36,6 +37,7 @@ OpCapability VariablePointers
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main"
+OpExecutionMode %main OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -69,6 +71,7 @@ OpCapability VariablePointers
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main"
+OpExecutionMode %main OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -102,6 +105,7 @@ OpCapability VariablePointers
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main"
+OpExecutionMode %main OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -137,6 +141,7 @@ OpCapability VariablePointers
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main"
+OpExecutionMode %main OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -175,6 +180,7 @@ OpCapability VariablePointers
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main"
+OpExecutionMode %main OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -217,6 +223,7 @@ OpCapability VariablePointers
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main"
+OpExecutionMode %main OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -253,6 +260,7 @@ OpCapability VariablePointers
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main"
+OpExecutionMode %main OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -287,6 +295,7 @@ OpCapability VariablePointers
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main"
+OpExecutionMode %main OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -324,6 +333,7 @@ OpCapability VariablePointers
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main"
+OpExecutionMode %main OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -359,6 +369,7 @@ OpCapability VariablePointers
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main"
+OpExecutionMode %main OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -397,6 +408,7 @@ OpCapability VariablePointers
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main"
+OpExecutionMode %main OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -433,6 +445,7 @@ OpCapability VariablePointers
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main"
+OpExecutionMode %main OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -466,6 +479,7 @@ OpCapability VariablePointers
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main"
+OpExecutionMode %main OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -503,6 +517,7 @@ OpCapability VariablePointers
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main"
+OpExecutionMode %main OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -541,6 +556,7 @@ OpCapability Addresses
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main"
+OpExecutionMode %main OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -577,6 +593,7 @@ OpCapability Addresses
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main"
+OpExecutionMode %main OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -614,6 +631,7 @@ OpCapability Addresses
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %main "main"
+OpExecutionMode %main OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -644,6 +662,7 @@ TEST_F(CombineAccessChainsTest, NoIndexAccessChains) {
 OpCapability Shader
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %func "func"
+OpExecutionMode %func OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %ptr_Workgroup_uint = OpTypePointer Workgroup %uint
@@ -671,6 +690,7 @@ OpCapability VariablePointers
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %func "func"
+OpExecutionMode %func OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -698,6 +718,7 @@ OpCapability VariablePointers
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %func "func"
+OpExecutionMode %func OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %uint_0 = OpConstant %uint 0
@@ -727,6 +748,7 @@ OpCapability Addresses
 OpExtension "SPV_KHR_variable_pointers"
 OpMemoryModel Logical GLSL450
 OpEntryPoint Fragment %func "func"
+OpExecutionMode %func OriginUpperLeft
 %void = OpTypeVoid
 %uint = OpTypeInt 32 0
 %int = OpTypeInt 32 1
@@ -745,7 +767,6 @@ OpFunctionEnd
 
   SinglePassRunAndMatch<CombineAccessChains>(text, true);
 }
-#endif  // SPIRV_EFFCEE
 
 }  // namespace
 }  // namespace opt

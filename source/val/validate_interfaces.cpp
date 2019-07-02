@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "source/val/validate.h"
-
 #include <algorithm>
+#include <vector>
 
 #include "source/diagnostic.h"
+#include "source/spirv_constant.h"
+#include "source/spirv_target_env.h"
 #include "source/val/function.h"
 #include "source/val/instruction.h"
+#include "source/val/validate.h"
 #include "source/val/validation_state.h"
 
 namespace spvtools {
@@ -26,15 +28,22 @@ namespace val {
 namespace {
 
 // Returns true if \c inst is an input or output variable.
-bool is_interface_variable(const Instruction* inst) {
-  return inst->opcode() == SpvOpVariable &&
-         (inst->word(3u) == SpvStorageClassInput ||
-          inst->word(3u) == SpvStorageClassOutput);
+bool is_interface_variable(const Instruction* inst, bool is_spv_1_4) {
+  if (is_spv_1_4) {
+    // Starting in SPIR-V 1.4, all global variables are interface variables.
+    return inst->opcode() == SpvOpVariable &&
+           inst->word(3u) != SpvStorageClassFunction;
+  } else {
+    return inst->opcode() == SpvOpVariable &&
+           (inst->word(3u) == SpvStorageClassInput ||
+            inst->word(3u) == SpvStorageClassOutput);
+  }
 }
 
 // Checks that \c var is listed as an interface in all the entry points that use
 // it.
-spv_result_t check_interface_variable(ValidationState_t& _, Instruction* var) {
+spv_result_t check_interface_variable(ValidationState_t& _,
+                                      const Instruction* var) {
   std::vector<const Function*> functions;
   std::vector<const Instruction*> uses;
   for (auto use : var->uses()) {
@@ -83,9 +92,8 @@ spv_result_t check_interface_variable(ValidationState_t& _, Instruction* var) {
       }
       if (!found) {
         return _.diag(SPV_ERROR_INVALID_ID, var)
-               << (var->word(3u) == SpvStorageClassInput ? "Input" : "Output")
-               << " variable id <" << var->id() << "> is used by entry point '"
-               << desc.name << "' id <" << id
+               << "Interface variable id <" << var->id()
+               << "> is used by entry point '" << desc.name << "' id <" << id
                << ">, but is not listed as an interface";
       }
     }
@@ -97,10 +105,10 @@ spv_result_t check_interface_variable(ValidationState_t& _, Instruction* var) {
 }  // namespace
 
 spv_result_t ValidateInterfaces(ValidationState_t& _) {
-  for (auto pair : _.all_definitions()) {
-    auto inst = pair.second;
-    if (is_interface_variable(inst)) {
-      if (auto error = check_interface_variable(_, inst)) {
+  bool is_spv_1_4 = _.version() >= SPV_SPIRV_VERSION_WORD(1, 4);
+  for (auto& inst : _.ordered_instructions()) {
+    if (is_interface_variable(&inst, is_spv_1_4)) {
+      if (auto error = check_interface_variable(_, &inst)) {
         return error;
       }
     }

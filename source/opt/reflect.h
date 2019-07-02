@@ -15,7 +15,7 @@
 #ifndef SOURCE_OPT_REFLECT_H_
 #define SOURCE_OPT_REFLECT_H_
 
-#include "latest_version_spirv_header.h"
+#include "source/latest_version_spirv_header.h"
 
 namespace spvtools {
 namespace opt {
@@ -44,7 +44,9 @@ inline bool IsAnnotationInst(SpvOp opcode) {
 }
 inline bool IsTypeInst(SpvOp opcode) {
   return (opcode >= SpvOpTypeVoid && opcode <= SpvOpTypeForwardPointer) ||
-         opcode == SpvOpTypePipeStorage || opcode == SpvOpTypeNamedBarrier;
+         opcode == SpvOpTypePipeStorage || opcode == SpvOpTypeNamedBarrier ||
+         opcode == SpvOpTypeAccelerationStructureNV ||
+         opcode == SpvOpTypeCooperativeMatrixNV;
 }
 inline bool IsConstantInst(SpvOp opcode) {
   return opcode >= SpvOpConstantTrue && opcode <= SpvOpSpecConstantOp;

@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pass_fixture.h"
-#include "pass_utils.h"
+#include <vector>
+
+#include "test/opt/pass_fixture.h"
+#include "test/opt/pass_utils.h"
 
 namespace spvtools {
 namespace opt {
@@ -87,7 +89,7 @@ TEST_P(StripDebugInfoTest, Kind) {
 
 // Test each possible non-line debug instruction.
 // clang-format off
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SingleKindDebugInst, StripDebugInfoTest,
     ::testing::ValuesIn(std::vector<const char*>({
         "OpSourceContinued \"I'm a happy shader! Yay! ;)\"",

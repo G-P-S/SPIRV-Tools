@@ -13,14 +13,16 @@
 // limitations under the License.
 
 #include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
 
-#include <gmock/gmock.h>
-
+#include "gmock/gmock.h"
 #include "source/opt/build_module.h"
 #include "source/opt/decoration_manager.h"
 #include "source/opt/ir_context.h"
 #include "source/spirv_constant.h"
-#include "unit_spirv.h"
+#include "test/unit_spirv.h"
 
 namespace spvtools {
 namespace opt {
@@ -61,7 +63,7 @@ class DecorationManagerTest : public ::testing::Test {
     tools_.SetMessageConsumer(consumer_);
   }
 
-  virtual void TearDown() override { error_message_.clear(); }
+  void TearDown() override { error_message_.clear(); }
 
   DecorationManager* GetDecorationManager(const std::string& text) {
     context_ = BuildModule(SPV_ENV_UNIVERSAL_1_2, consumer_, text);
@@ -420,6 +422,7 @@ OpGroupDecorate %2 %1 %3
 OpCapability Linkage
 OpMemoryModel Logical GLSL450
 OpDecorate %1 Constant
+%2 = OpDecorationGroup
 %4 = OpTypeInt 32 0
 %1 = OpVariable %4 Uniform
 %3 = OpVariable %4 Uniform
@@ -532,12 +535,11 @@ OpGroupDecorate %3 %1
 )";
   DecorationManager* decoManager = GetDecorationManager(spirv);
   EXPECT_THAT(GetErrorMessage(), "");
-  decoManager->RemoveDecorationsFrom(
-      1u, [](const Instruction& inst) {
-        return inst.opcode() == SpvOpDecorate &&
-               inst.GetSingleWordInOperand(0u) == 3u &&
-               inst.GetSingleWordInOperand(1u) == SpvDecorationBuiltIn;
-      });
+  decoManager->RemoveDecorationsFrom(1u, [](const Instruction& inst) {
+    return inst.opcode() == SpvOpDecorate &&
+           inst.GetSingleWordInOperand(0u) == 3u &&
+           inst.GetSingleWordInOperand(1u) == SpvDecorationBuiltIn;
+  });
   auto decorations = decoManager->GetDecorationsFor(1u, false);
   EXPECT_THAT(GetErrorMessage(), "");
 
@@ -707,8 +709,8 @@ OpDecorate %1 Aliased
   EXPECT_THAT(GetErrorMessage(), "");
 
   std::string expected_decorations =
-      R"(OpDecorateStringGOOGLE %5 HlslSemanticGOOGLE "blah"
-OpDecorateId %5 HlslCounterBufferGOOGLE %2
+      R"(OpDecorateString %5 UserSemantic "blah"
+OpDecorateId %5 CounterBuffer %2
 OpDecorate %5 Aliased
 )";
   EXPECT_THAT(ToText(decorations), expected_decorations);
@@ -718,11 +720,11 @@ OpCapability Linkage
 OpExtension "SPV_GOOGLE_hlsl_functionality1"
 OpExtension "SPV_GOOGLE_decorate_string"
 OpMemoryModel Logical GLSL450
-OpDecorateStringGOOGLE %1 HlslSemanticGOOGLE "blah"
-OpDecorateId %1 HlslCounterBufferGOOGLE %2
+OpDecorateString %1 UserSemantic "blah"
+OpDecorateId %1 CounterBuffer %2
 OpDecorate %1 Aliased
-OpDecorateStringGOOGLE %5 HlslSemanticGOOGLE "blah"
-OpDecorateId %5 HlslCounterBufferGOOGLE %2
+OpDecorateString %5 UserSemantic "blah"
+OpDecorateId %5 CounterBuffer %2
 OpDecorate %5 Aliased
 %3 = OpTypeInt 32 0
 %4 = OpTypePointer Uniform %3
@@ -731,6 +733,123 @@ OpDecorate %5 Aliased
 %5 = OpVariable %4 Uniform
 )";
   EXPECT_THAT(ModuleToText(), expected_binary);
+}
+
+TEST_F(DecorationManagerTest, CloneSomeDecorations) {
+  const std::string spirv = R"(OpCapability Shader
+OpCapability Linkage
+OpExtension "SPV_GOOGLE_hlsl_functionality1"
+OpExtension "SPV_GOOGLE_decorate_string"
+OpMemoryModel Logical GLSL450
+OpDecorate %1 RelaxedPrecision
+OpDecorate %1 Restrict
+%2 = OpTypeInt 32 0
+%3 = OpTypePointer Function %2
+%4 = OpTypeVoid
+%5 = OpTypeFunction %4
+%6 = OpFunction %4 None %5
+%7 = OpLabel
+%1 = OpVariable %3 Function
+%8 = OpUndef %2
+OpReturn
+OpFunctionEnd
+)";
+  DecorationManager* decoManager = GetDecorationManager(spirv);
+  EXPECT_EQ(GetErrorMessage(), "");
+
+  // Check cloning OpDecorate including group decorations.
+  auto decorations = decoManager->GetDecorationsFor(8u, false);
+  EXPECT_EQ(GetErrorMessage(), "");
+  EXPECT_TRUE(decorations.empty());
+
+  decoManager->CloneDecorations(1u, 8u, {SpvDecorationRelaxedPrecision});
+  decorations = decoManager->GetDecorationsFor(8u, false);
+  EXPECT_THAT(GetErrorMessage(), "");
+
+  std::string expected_decorations =
+      R"(OpDecorate %8 RelaxedPrecision
+)";
+  EXPECT_EQ(ToText(decorations), expected_decorations);
+
+  const std::string expected_binary = R"(OpCapability Shader
+OpCapability Linkage
+OpExtension "SPV_GOOGLE_hlsl_functionality1"
+OpExtension "SPV_GOOGLE_decorate_string"
+OpMemoryModel Logical GLSL450
+OpDecorate %1 RelaxedPrecision
+OpDecorate %1 Restrict
+OpDecorate %8 RelaxedPrecision
+%2 = OpTypeInt 32 0
+%3 = OpTypePointer Function %2
+%4 = OpTypeVoid
+%5 = OpTypeFunction %4
+%6 = OpFunction %4 None %5
+%7 = OpLabel
+%1 = OpVariable %3 Function
+%8 = OpUndef %2
+OpReturn
+OpFunctionEnd
+)";
+  EXPECT_EQ(ModuleToText(), expected_binary);
+}
+
+// Test cloning decoration for an id that is decorated via a group decoration.
+TEST_F(DecorationManagerTest, CloneSomeGroupDecorations) {
+  const std::string spirv = R"(OpCapability Shader
+OpCapability Linkage
+OpMemoryModel Logical GLSL450
+OpDecorate %1 RelaxedPrecision
+OpDecorate %1 Restrict
+%1 = OpDecorationGroup
+OpGroupDecorate %1 %2
+%3 = OpTypeInt 32 0
+%4 = OpTypePointer Function %3
+%5 = OpTypeVoid
+%6 = OpTypeFunction %5
+%7 = OpFunction %5 None %6
+%8 = OpLabel
+%2 = OpVariable %4 Function
+%9 = OpUndef %3
+OpReturn
+OpFunctionEnd
+)";
+  DecorationManager* decoManager = GetDecorationManager(spirv);
+  EXPECT_EQ(GetErrorMessage(), "");
+
+  // Check cloning OpDecorate including group decorations.
+  auto decorations = decoManager->GetDecorationsFor(9u, false);
+  EXPECT_EQ(GetErrorMessage(), "");
+  EXPECT_TRUE(decorations.empty());
+
+  decoManager->CloneDecorations(2u, 9u, {SpvDecorationRelaxedPrecision});
+  decorations = decoManager->GetDecorationsFor(9u, false);
+  EXPECT_THAT(GetErrorMessage(), "");
+
+  std::string expected_decorations =
+      R"(OpDecorate %9 RelaxedPrecision
+)";
+  EXPECT_EQ(ToText(decorations), expected_decorations);
+
+  const std::string expected_binary = R"(OpCapability Shader
+OpCapability Linkage
+OpMemoryModel Logical GLSL450
+OpDecorate %1 RelaxedPrecision
+OpDecorate %1 Restrict
+%1 = OpDecorationGroup
+OpGroupDecorate %1 %2
+OpDecorate %9 RelaxedPrecision
+%3 = OpTypeInt 32 0
+%4 = OpTypePointer Function %3
+%5 = OpTypeVoid
+%6 = OpTypeFunction %5
+%7 = OpFunction %5 None %6
+%8 = OpLabel
+%2 = OpVariable %4 Function
+%9 = OpUndef %3
+OpReturn
+OpFunctionEnd
+)";
+  EXPECT_EQ(ModuleToText(), expected_binary);
 }
 
 TEST_F(DecorationManagerTest, HaveTheSameDecorationsWithoutGroupsTrue) {

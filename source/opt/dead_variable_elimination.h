@@ -18,19 +18,20 @@
 #include <climits>
 #include <unordered_map>
 
-#include "decoration_manager.h"
-#include "mem_pass.h"
+#include "source/opt/decoration_manager.h"
+#include "source/opt/mem_pass.h"
 
 namespace spvtools {
 namespace opt {
 
 class DeadVariableElimination : public MemPass {
  public:
-  const char* name() const override { return "dead-variable-elimination"; }
+  const char* name() const override { return "eliminate-dead-variables"; }
   Status Process() override;
 
   IRContext::Analysis GetPreservedAnalyses() override {
-    return IRContext::kAnalysisDefUse;
+    return IRContext::kAnalysisDefUse | IRContext::kAnalysisConstants |
+           IRContext::kAnalysisTypes;
   }
 
  private:

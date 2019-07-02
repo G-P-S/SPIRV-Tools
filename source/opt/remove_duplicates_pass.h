@@ -16,12 +16,13 @@
 #define SOURCE_OPT_REMOVE_DUPLICATES_PASS_H_
 
 #include <unordered_map>
+#include <vector>
 
-#include "decoration_manager.h"
-#include "def_use_manager.h"
-#include "ir_context.h"
-#include "module.h"
-#include "pass.h"
+#include "source/opt/decoration_manager.h"
+#include "source/opt/def_use_manager.h"
+#include "source/opt/ir_context.h"
+#include "source/opt/module.h"
+#include "source/opt/pass.h"
 
 namespace spvtools {
 namespace opt {
@@ -34,12 +35,6 @@ class RemoveDuplicatesPass : public Pass {
  public:
   const char* name() const override { return "remove-duplicates"; }
   Status Process() override;
-
-  // TODO(pierremoreau): Move this function somewhere else (e.g. pass.h or
-  // within the type manager)
-  // Returns whether two types are equal, and have the same decorations.
-  static bool AreTypesEqual(const Instruction& inst1, const Instruction& inst2,
-                            IRContext* context);
 
  private:
   // Remove duplicate capabilities from the module

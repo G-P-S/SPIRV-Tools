@@ -15,10 +15,12 @@
 // Assembler tests for instructions in the "Group Instrucions" section of the
 // SPIR-V spec.
 
-#include "unit_spirv.h"
+#include <string>
+#include <vector>
 
 #include "gmock/gmock.h"
-#include "test_fixture.h"
+#include "test/test_fixture.h"
+#include "test/unit_spirv.h"
 
 namespace spvtools {
 namespace {
@@ -42,12 +44,12 @@ TEST_P(GroupOperationTest, AnyGroupOperation) {
 
 // clang-format off
 #define CASE(NAME) { SpvGroupOperation##NAME, #NAME}
-INSTANTIATE_TEST_CASE_P(TextToBinaryGroupOperation, GroupOperationTest,
+INSTANTIATE_TEST_SUITE_P(TextToBinaryGroupOperation, GroupOperationTest,
                         ::testing::ValuesIn(std::vector<EnumCase<SpvGroupOperation>>{
                             CASE(Reduce),
                             CASE(InclusiveScan),
                             CASE(ExclusiveScan),
-                        }),);
+                        }));
 #undef CASE
 // clang-format on
 

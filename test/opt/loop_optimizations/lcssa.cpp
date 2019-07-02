@@ -12,29 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gmock/gmock.h>
-
 #include <memory>
 #include <string>
 #include <vector>
 
-#ifdef SPIRV_EFFCEE
 #include "effcee/effcee.h"
-#endif
-
-#include "../assembly_builder.h"
-#include "../function_utils.h"
-
-#include "opt/build_module.h"
-#include "opt/loop_descriptor.h"
-#include "opt/loop_utils.h"
-#include "opt/pass.h"
+#include "gmock/gmock.h"
+#include "source/opt/build_module.h"
+#include "source/opt/loop_descriptor.h"
+#include "source/opt/loop_utils.h"
+#include "source/opt/pass.h"
+#include "test/opt//assembly_builder.h"
+#include "test/opt/function_utils.h"
 
 namespace spvtools {
 namespace opt {
 namespace {
-
-#ifdef SPIRV_EFFCEE
 
 bool Validate(const std::vector<uint32_t>& bin) {
   spv_target_env target_env = SPV_ENV_UNIVERSAL_1_2;
@@ -608,8 +601,6 @@ TEST_F(LCSSATest, LCSSAUseInNonEligiblePhi) {
   EXPECT_TRUE(loop->IsLCSSA());
   Match(text, context.get());
 }
-
-#endif  // SPIRV_EFFCEE
 
 }  // namespace
 }  // namespace opt

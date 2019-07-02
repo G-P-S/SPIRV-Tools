@@ -12,11 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
+#include <tuple>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 
-#include "assembly_builder.h"
-#include "pass_fixture.h"
-#include "pass_utils.h"
+#include "test/opt/assembly_builder.h"
+#include "test/opt/pass_fixture.h"
+#include "test/opt/pass_utils.h"
 
 namespace spvtools {
 namespace opt {
@@ -350,8 +354,14 @@ TEST_P(UnifyFrontEndConstantParamTest, TestCase) {
   Check(expected_builder, test_builder);
 }
 
-INSTANTIATE_TEST_CASE_P(Case, UnifyFrontEndConstantParamTest,
-                        ::testing::ValuesIn(std::vector<UnifyConstantTestCase>({
+INSTANTIATE_TEST_SUITE_P(
+    Case, UnifyFrontEndConstantParamTest,
+    ::
+        testing::
+            ValuesIn(
+                std::
+                    vector<UnifyConstantTestCase>(
+                        {
                             // clang-format off
         // basic tests for scalar constants
         {

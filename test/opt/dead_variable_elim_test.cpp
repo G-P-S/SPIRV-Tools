@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pass_fixture.h"
-#include "pass_utils.h"
+#include <string>
+
+#include "test/opt/pass_fixture.h"
+#include "test/opt/pass_utils.h"
 
 namespace spvtools {
 namespace opt {
@@ -215,7 +217,7 @@ OpName %initializer "initializer"
 %6 = OpTypeFunction %void
 %float = OpTypeFloat 32
 %_ptr_Private_float = OpTypePointer Private %float
-%initializer = OpVariable %_ptr_Private_float Private
+%initializer = OpConstant %float 0
 %live = OpVariable %_ptr_Private_float Private %initializer
 %main = OpFunction %void None %6
 %9 = OpLabel

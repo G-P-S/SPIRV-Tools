@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "opt/loop_fission.h"
-#include "opt/register_pressure.h"
+#include "source/opt/loop_fission.h"
+
+#include <set>
+
+#include "source/opt/register_pressure.h"
 
 // Implement loop fission with an optional parameter to split only
 // if the register pressure in a given loop meets a certain criteria. This is
@@ -364,6 +367,7 @@ Loop* LoopFissionImpl::SplitLoop() {
   cloned_loop->UpdateLoopMergeInst();
 
   // Add the loop_ to the module.
+  // TODO(1841): Handle failure to create pre-header.
   Function::iterator it =
       util.GetFunction()->FindBlock(loop_->GetOrCreatePreHeaderBlock()->id());
   util.GetFunction()->AddBasicBlocks(clone_results.cloned_bb_.begin(),
