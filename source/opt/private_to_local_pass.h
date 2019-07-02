@@ -15,8 +15,8 @@
 #ifndef SOURCE_OPT_PRIVATE_TO_LOCAL_PASS_H_
 #define SOURCE_OPT_PRIVATE_TO_LOCAL_PASS_H_
 
-#include "ir_context.h"
-#include "pass.h"
+#include "source/opt/ir_context.h"
+#include "source/opt/pass.h"
 
 namespace spvtools {
 namespace opt {
@@ -35,7 +35,8 @@ class PrivateToLocalPass : public Pass {
            IRContext::kAnalysisInstrToBlockMapping |
            IRContext::kAnalysisDecorations | IRContext::kAnalysisCombinators |
            IRContext::kAnalysisCFG | IRContext::kAnalysisDominatorAnalysis |
-           IRContext::kAnalysisNameMap;
+           IRContext::kAnalysisNameMap | IRContext::kAnalysisConstants |
+           IRContext::kAnalysisTypes;
   }
 
  private:

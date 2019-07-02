@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "opt/value_number_table.h"
+#include <string>
 
-#include "assembly_builder.h"
 #include "gmock/gmock.h"
-#include "opt/build_module.h"
-#include "pass_fixture.h"
-#include "pass_utils.h"
+#include "source/opt/build_module.h"
+#include "source/opt/value_number_table.h"
+#include "test/opt/assembly_builder.h"
+#include "test/opt/pass_fixture.h"
+#include "test/opt/pass_utils.h"
 
 namespace spvtools {
 namespace opt {
@@ -28,7 +29,6 @@ using ::testing::HasSubstr;
 using ::testing::MatchesRegex;
 using RedundancyEliminationTest = PassTest<::testing::Test>;
 
-#ifdef SPIRV_EFFCEE
 // Test that it can get a simple case of local redundancy elimination.
 // The rest of the test check for extra functionality.
 TEST_F(RedundancyEliminationTest, RemoveRedundantLocalAdd) {
@@ -271,8 +271,6 @@ TEST_F(RedundancyEliminationTest, KeepRedundantAddWithoutPhi) {
       text, /* skip_nop = */ true, /* do_validation = */ false);
   EXPECT_EQ(Pass::Status::SuccessWithoutChange, std::get<1>(result));
 }
-
-#endif
 
 }  // namespace
 }  // namespace opt

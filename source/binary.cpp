@@ -12,24 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "binary.h"
+#include "source/binary.h"
 
 #include <algorithm>
 #include <cassert>
 #include <cstring>
 #include <iterator>
 #include <limits>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "assembly_grammar.h"
-#include "diagnostic.h"
-#include "ext_inst.h"
-#include "latest_version_spirv_header.h"
-#include "opcode.h"
-#include "operand.h"
-#include "spirv_constant.h"
-#include "spirv_endian.h"
+#include "source/assembly_grammar.h"
+#include "source/diagnostic.h"
+#include "source/ext_inst.h"
+#include "source/latest_version_spirv_header.h"
+#include "source/opcode.h"
+#include "source/operand.h"
+#include "source/spirv_constant.h"
+#include "source/spirv_endian.h"
 
 spv_result_t spvBinaryHeaderGet(const spv_const_binary binary,
                                 const spv_endianness_t endian,
@@ -122,8 +123,8 @@ class Parser {
   // returned object will be propagated to the current parse's diagnostic
   // object.
   spvtools::DiagnosticStream diagnostic(spv_result_t error) {
-    return spvtools::DiagnosticStream({0, 0, _.word_index}, consumer_, "",
-                                      error);
+    return spvtools::DiagnosticStream({0, 0, _.instruction_count}, consumer_,
+                                      "", error);
   }
 
   // Returns a diagnostic stream object with the default parse error code.
@@ -178,6 +179,7 @@ class Parser {
           num_words(num_words_arg),
           diagnostic(diagnostic_arg),
           word_index(0),
+          instruction_count(0),
           endian(),
           requires_endian_conversion(false) {
       // Temporary storage for parser state within a single instruction.
@@ -191,6 +193,7 @@ class Parser {
     size_t num_words;            // Number of words in the module.
     spv_diagnostic* diagnostic;  // Where diagnostics go.
     size_t word_index;           // The current position in words.
+    size_t instruction_count;    // The count of processed instructions
     spv_endianness_t endian;     // The endianness of the binary.
     // Is the SPIR-V binary in a different endiannes from the host native
     // endianness?
@@ -268,6 +271,8 @@ spv_result_t Parser::parseModule() {
 }
 
 spv_result_t Parser::parseInstruction() {
+  _.instruction_count++;
+
   // The zero values for all members except for opcode are the
   // correct initial values.
   spv_parsed_instruction_t inst = {};

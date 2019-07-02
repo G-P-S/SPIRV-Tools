@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "assembly_grammar.h"
+#include "source/assembly_grammar.h"
 
 #include <algorithm>
 #include <cassert>
 #include <cstring>
 
-#include "ext_inst.h"
-#include "opcode.h"
-#include "operand.h"
-#include "table.h"
+#include "source/ext_inst.h"
+#include "source/opcode.h"
+#include "source/operand.h"
+#include "source/table.h"
 
 namespace spvtools {
 namespace {
@@ -154,10 +154,11 @@ const SpecConstantOpcodeEntry kOpSpecConstantOpcodes[] = {
     CASE(InBoundsAccessChain),
     CASE(PtrAccessChain),
     CASE(InBoundsPtrAccessChain),
+    CASE(CooperativeMatrixLengthNV)
 };
 
-// The 59 is determined by counting the opcodes listed in the spec.
-static_assert(59 == sizeof(kOpSpecConstantOpcodes)/sizeof(kOpSpecConstantOpcodes[0]),
+// The 60 is determined by counting the opcodes listed in the spec.
+static_assert(60 == sizeof(kOpSpecConstantOpcodes)/sizeof(kOpSpecConstantOpcodes[0]),
               "OpSpecConstantOp opcode table is incomplete");
 #undef CASE
 // clang-format on

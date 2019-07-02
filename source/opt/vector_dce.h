@@ -15,8 +15,11 @@
 #ifndef SOURCE_OPT_VECTOR_DCE_H_
 #define SOURCE_OPT_VECTOR_DCE_H_
 
-#include <util/bit_vector.h>
-#include "mem_pass.h"
+#include <unordered_map>
+#include <vector>
+
+#include "source/opt/mem_pass.h"
+#include "source/util/bit_vector.h"
 
 namespace spvtools {
 namespace opt {
@@ -50,7 +53,8 @@ class VectorDCE : public MemPass {
     return IRContext::kAnalysisDefUse | IRContext::kAnalysisCFG |
            IRContext::kAnalysisInstrToBlockMapping |
            IRContext::kAnalysisLoopAnalysis | IRContext::kAnalysisDecorations |
-           IRContext::kAnalysisDominatorAnalysis | IRContext::kAnalysisNameMap;
+           IRContext::kAnalysisDominatorAnalysis | IRContext::kAnalysisNameMap |
+           IRContext::kAnalysisConstants | IRContext::kAnalysisTypes;
   }
 
  private:
@@ -125,6 +129,7 @@ class VectorDCE : public MemPass {
   // live. If anything becomes live they are added to |work_list| and
   // |live_components| is updated accordingly.
   void MarkExtractUseAsLive(const Instruction* current_inst,
+                            const utils::BitVector& live_elements,
                             LiveComponentMap* live_components,
                             std::vector<WorkListItem>* work_list);
 

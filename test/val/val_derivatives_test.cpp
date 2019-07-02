@@ -16,8 +16,8 @@
 #include <string>
 
 #include "gmock/gmock.h"
-#include "unit_spirv.h"
-#include "val_fixtures.h"
+#include "test/unit_spirv.h"
+#include "test/val/val_fixtures.h"
 
 namespace spvtools {
 namespace val {
@@ -44,6 +44,9 @@ OpCapability DerivativeControl
      << " %f32_var_input"
      << " %f32vec4_var_input"
      << "\n";
+  if (execution_model == "Fragment") {
+    ss << "OpExecutionMode %main OriginUpperLeft\n";
+  }
 
   ss << R"(
 %void = OpTypeVoid
@@ -116,11 +119,9 @@ TEST_F(ValidateDerivatives, OpDPdxWrongResultType) {
 )";
 
   CompileSuccessfully(GenerateShaderCode(body).c_str());
-  ASSERT_EQ(SPV_ERROR_INVALID_DATA, ValidateInstructions());
-  EXPECT_THAT(
-      getDiagnosticString(),
-      HasSubstr("Expected Result Type to be float scalar or vector type: "
-                "DPdx"));
+  ASSERT_EQ(SPV_ERROR_INVALID_ID, ValidateInstructions());
+  EXPECT_THAT(getDiagnosticString(), HasSubstr("Operand 10[%v4float] cannot "
+                                               "be a type"));
 }
 
 TEST_F(ValidateDerivatives, OpDPdxWrongPType) {

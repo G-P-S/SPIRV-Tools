@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gtest/gtest.h>
+#include <string>
+#include <vector>
 
-#include "pass_utils.h"
+#include "gtest/gtest.h"
+#include "test/opt/pass_utils.h"
 
 namespace spvtools {
 namespace opt {
@@ -70,7 +72,7 @@ TEST_P(FindAndReplaceTest, SubstringReplacement) {
       << " expected string: " << GetParam().expected_str;
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SubstringReplacement, FindAndReplaceTest,
     ::testing::ValuesIn(std::vector<SubstringReplacementTestCase>({
         // orig string, find substring, replace substring, expected string,

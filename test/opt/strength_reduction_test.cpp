@@ -12,16 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "assembly_builder.h"
-#include "gmock/gmock.h"
-#include "pass_fixture.h"
-#include "pass_utils.h"
-
 #include <algorithm>
 #include <cstdarg>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <unordered_set>
+#include <vector>
+
+#include "gmock/gmock.h"
+#include "test/opt/assembly_builder.h"
+#include "test/opt/pass_fixture.h"
+#include "test/opt/pass_utils.h"
 
 namespace spvtools {
 namespace opt {
@@ -63,7 +65,6 @@ TEST_F(StrengthReductionBasicTest, BasicReplaceMulBy8) {
 }
 
 // TODO(dneto): Add Effcee as required dependency, and make this unconditional.
-#ifdef SPIRV_EFFCEE
 // Test to make sure we replace 16*5
 // Also demonstrate use of Effcee matching.
 TEST_F(StrengthReductionBasicTest, BasicReplaceMulBy16) {
@@ -100,7 +101,6 @@ TEST_F(StrengthReductionBasicTest, BasicReplaceMulBy16) {
 
   SinglePassRunAndMatch<StrengthReductionPass>(text, false);
 }
-#endif
 
 // Test to make sure we replace a multiple of 32 and 4.
 TEST_F(StrengthReductionBasicTest, BasicTwoPowersOf2) {

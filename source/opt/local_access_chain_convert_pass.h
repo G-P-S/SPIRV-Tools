@@ -19,15 +19,18 @@
 
 #include <algorithm>
 #include <map>
+#include <memory>
 #include <queue>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
-#include "basic_block.h"
-#include "def_use_manager.h"
-#include "mem_pass.h"
-#include "module.h"
+#include "source/opt/basic_block.h"
+#include "source/opt/def_use_manager.h"
+#include "source/opt/mem_pass.h"
+#include "source/opt/module.h"
 
 namespace spvtools {
 namespace opt {
@@ -41,7 +44,8 @@ class LocalAccessChainConvertPass : public MemPass {
   Status Process() override;
 
   IRContext::Analysis GetPreservedAnalyses() override {
-    return IRContext::kAnalysisDefUse;
+    return IRContext::kAnalysisDefUse | IRContext::kAnalysisConstants |
+           IRContext::kAnalysisTypes;
   }
 
   using ProcessFunction = std::function<bool(Function*)>;
@@ -83,11 +87,12 @@ class LocalAccessChainConvertPass : public MemPass {
       const Instruction* ptrInst, uint32_t valId,
       std::vector<std::unique_ptr<Instruction>>* newInsts);
 
-  // For the (constant index) access chain |ptrInst|, create an
-  // equivalent load and extract. Append to |newInsts|.
-  uint32_t GenAccessChainLoadReplacement(
-      const Instruction* ptrInst,
-      std::vector<std::unique_ptr<Instruction>>* newInsts);
+  // For the (constant index) access chain |address_inst|, create an
+  // equivalent load and extract that replaces |original_load|.  The result id
+  // of the extract will be the same as the original result id of
+  // |original_load|.
+  void ReplaceAccessChainLoad(const Instruction* address_inst,
+                              Instruction* original_load);
 
   // Return true if all indices of access chain |acp| are OpConstant integers
   bool IsConstantIndexAccessChain(const Instruction* acp) const;

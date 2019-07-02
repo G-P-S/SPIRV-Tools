@@ -19,10 +19,10 @@
 #include <queue>
 #include <unordered_set>
 
-#include "cfg_cleanup_pass.h"
+#include "source/opt/cfg_cleanup_pass.h"
 
-#include "function.h"
-#include "module.h"
+#include "source/opt/function.h"
+#include "source/opt/module.h"
 
 namespace spvtools {
 namespace opt {
@@ -30,7 +30,7 @@ namespace opt {
 Pass::Status CFGCleanupPass::Process() {
   // Process all entry point functions.
   ProcessFunction pfn = [this](Function* fp) { return CFGCleanup(fp); };
-  bool modified = ProcessReachableCallTree(pfn, context());
+  bool modified = context()->ProcessReachableCallTree(pfn);
   return modified ? Pass::Status::SuccessWithChange
                   : Pass::Status::SuccessWithoutChange;
 }

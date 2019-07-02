@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pass_manager.h"
+#include "source/opt/pass_manager.h"
 
 #include <iostream>
+#include <string>
 #include <vector>
 
-#include "ir_context.h"
+#include "source/opt/ir_context.h"
+#include "source/util/timer.h"
 #include "spirv-tools/libspirv.hpp"
-#include "util/timer.h"
 
 namespace spvtools {
 
@@ -49,6 +50,20 @@ Pass::Status PassManager::Run(IRContext* context) {
     const auto one_status = pass->Run(context);
     if (one_status == Pass::Status::Failure) return one_status;
     if (one_status == Pass::Status::SuccessWithChange) status = one_status;
+
+    if (validate_after_all_) {
+      spvtools::SpirvTools tools(target_env_);
+      tools.SetMessageConsumer(consumer());
+      std::vector<uint32_t> binary;
+      context->module()->ToBinary(&binary, true);
+      if (!tools.Validate(binary.data(), binary.size(), val_options_)) {
+        std::string msg = "Validation failed after pass ";
+        msg += pass->name();
+        spv_position_t null_pos{0, 0, 0};
+        consumer()(SPV_MSG_INTERNAL_ERROR, "", null_pos, msg.c_str());
+        return Pass::Status::Failure;
+      }
+    }
 
     // Reset the pass to free any memory used by the pass.
     pass.reset(nullptr);

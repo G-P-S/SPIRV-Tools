@@ -15,10 +15,12 @@
 // Tests for OpExtension validator rules.
 
 #include <string>
+#include <utility>
+#include <vector>
 
-#include "enum_string_mapping.h"
-#include "extensions.h"
 #include "gtest/gtest.h"
+#include "source/enum_string_mapping.h"
+#include "source/extensions.h"
 
 namespace spvtools {
 namespace {
@@ -62,7 +64,7 @@ TEST_P(CapabilityTest, TestCapabilityToString) {
   EXPECT_EQ(capability_str, result_str);
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     AllExtensions, ExtensionTest,
     ValuesIn(std::vector<std::pair<Extension, std::string>>({
         {Extension::kSPV_KHR_16bit_storage, "SPV_KHR_16bit_storage"},
@@ -87,13 +89,13 @@ INSTANTIATE_TEST_CASE_P(
         {Extension::kSPV_KHR_8bit_storage, "SPV_KHR_8bit_storage"},
     })));
 
-INSTANTIATE_TEST_CASE_P(UnknownExtensions, UnknownExtensionTest,
-                        Values("", "SPV_KHR_", "SPV_KHR_device_group_ERROR",
-                               /*alphabetically before all extensions*/ "A",
-                               /*alphabetically after all extensions*/ "Z",
-                               "SPV_ERROR_random_string_hfsdklhlktherh"));
+INSTANTIATE_TEST_SUITE_P(UnknownExtensions, UnknownExtensionTest,
+                         Values("", "SPV_KHR_", "SPV_KHR_device_group_ERROR",
+                                /*alphabetically before all extensions*/ "A",
+                                /*alphabetically after all extensions*/ "Z",
+                                "SPV_ERROR_random_string_hfsdklhlktherh"));
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     AllCapabilities, CapabilityTest,
     ValuesIn(std::vector<std::pair<SpvCapability, std::string>>(
         {{SpvCapabilityMatrix, "Matrix"},
@@ -187,7 +189,7 @@ INSTANTIATE_TEST_CASE_P(
           "ShaderViewportIndexLayerEXT"},
          {SpvCapabilityShaderViewportMaskNV, "ShaderViewportMaskNV"},
          {SpvCapabilityShaderStereoViewNV, "ShaderStereoViewNV"},
-         {SpvCapabilityPerViewAttributesNV, "PerViewAttributesNV"}})), );
+         {SpvCapabilityPerViewAttributesNV, "PerViewAttributesNV"}})));
 
 }  // namespace
 }  // namespace spvtools

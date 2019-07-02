@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "opt/instruction.h"
-#include "opt/ir_context.h"
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "gmock/gmock.h"
-
-#include "pass_fixture.h"
-#include "pass_utils.h"
+#include "source/opt/instruction.h"
+#include "source/opt/ir_context.h"
 #include "spirv-tools/libspirv.h"
-#include "unit_spirv.h"
+#include "test/opt/pass_fixture.h"
+#include "test/opt/pass_utils.h"
+#include "test/unit_spirv.h"
 
 namespace spvtools {
 namespace opt {
@@ -617,6 +619,35 @@ TEST_F(GetBaseTest, SampleImage) {
       BuildModule(SPV_ENV_UNIVERSAL_1_2, nullptr, text);
   Instruction* load = context->get_def_use_mgr()->GetDef(21);
   Instruction* base = context->get_def_use_mgr()->GetDef(20);
+  EXPECT_TRUE(load->GetBaseAddress() == base);
+}
+
+TEST_F(GetBaseTest, PtrAccessChain) {
+  const std::string text = R"(
+               OpCapability VariablePointers
+               OpMemoryModel Logical GLSL450
+               OpEntryPoint Fragment %1 "PSMain" %2
+               OpExecutionMode %1 OriginUpperLeft
+       %void = OpTypeVoid
+          %4 = OpTypeFunction %void
+      %float = OpTypeFloat 32
+    %v4float = OpTypeVector %float 4
+        %int = OpTypeInt 32 8388353
+      %int_0 = OpConstant %int 0
+%_ptr_Function_v4float = OpTypePointer Function %v4float
+          %2 = OpVariable %_ptr_Function_v4float Input
+          %1 = OpFunction %void None %4
+         %10 = OpLabel
+         %11 = OpPtrAccessChain %_ptr_Function_v4float %2 %int_0
+         %12 = OpLoad %v4float %11
+               OpReturn
+               OpFunctionEnd
+)";
+
+  std::unique_ptr<IRContext> context =
+      BuildModule(SPV_ENV_UNIVERSAL_1_2, nullptr, text);
+  Instruction* load = context->get_def_use_mgr()->GetDef(12);
+  Instruction* base = context->get_def_use_mgr()->GetDef(2);
   EXPECT_TRUE(load->GetBaseAddress() == base);
 }
 

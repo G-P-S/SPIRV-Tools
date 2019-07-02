@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "strip_reflect_info_pass.h"
+#include "source/opt/strip_reflect_info_pass.h"
 
 #include <cstring>
+#include <vector>
 
-#include "instruction.h"
-#include "ir_context.h"
+#include "source/opt/instruction.h"
+#include "source/opt/ir_context.h"
 
 namespace spvtools {
 namespace opt {
@@ -32,6 +33,14 @@ Pass::Status StripReflectInfoPass::Process() {
     switch (inst.opcode()) {
       case SpvOpDecorateStringGOOGLE:
         if (inst.GetSingleWordInOperand(1) == SpvDecorationHlslSemanticGOOGLE) {
+          to_remove.push_back(&inst);
+        } else {
+          other_uses_for_decorate_string = true;
+        }
+        break;
+
+      case SpvOpMemberDecorateStringGOOGLE:
+        if (inst.GetSingleWordInOperand(2) == SpvDecorationHlslSemanticGOOGLE) {
           to_remove.push_back(&inst);
         } else {
           other_uses_for_decorate_string = true;

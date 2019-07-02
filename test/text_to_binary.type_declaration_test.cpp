@@ -15,10 +15,12 @@
 // Assembler tests for instructions in the "Type-Declaration" section of the
 // SPIR-V spec.
 
-#include "unit_spirv.h"
+#include <string>
+#include <vector>
 
 #include "gmock/gmock.h"
-#include "test_fixture.h"
+#include "test/test_fixture.h"
+#include "test/unit_spirv.h"
 
 namespace spvtools {
 namespace {
@@ -46,7 +48,7 @@ TEST_P(DimTest, AnyDim) {
 
 // clang-format off
 #define CASE(NAME) {SpvDim##NAME, #NAME}
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     TextToBinaryDim, DimTest,
     ::testing::ValuesIn(std::vector<EnumCase<SpvDim>>{
         CASE(1D),
@@ -56,7 +58,7 @@ INSTANTIATE_TEST_CASE_P(
         CASE(Rect),
         CASE(Buffer),
         CASE(SubpassData),
-    }),);
+    }));
 #undef CASE
 // clang-format on
 
@@ -82,7 +84,7 @@ TEST_P(ImageFormatTest, AnyImageFormatAndNoAccessQualifier) {
 
 // clang-format off
 #define CASE(NAME) {SpvImageFormat##NAME, #NAME}
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     TextToBinaryImageFormat, ImageFormatTest,
     ::testing::ValuesIn(std::vector<EnumCase<SpvImageFormat>>{
         CASE(Unknown),
@@ -125,7 +127,7 @@ INSTANTIATE_TEST_CASE_P(
         CASE(Rg8ui),
         CASE(R16ui),
         CASE(R8ui),
-    }),);
+    }));
 #undef CASE
 // clang-format on
 
@@ -151,13 +153,13 @@ TEST_P(ImageAccessQualifierTest, AnyAccessQualifier) {
 
 // clang-format off
 #define CASE(NAME) {SpvAccessQualifier##NAME, #NAME}
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     AccessQualifier, ImageAccessQualifierTest,
     ::testing::ValuesIn(std::vector<EnumCase<SpvAccessQualifier>>{
       CASE(ReadOnly),
       CASE(WriteOnly),
       CASE(ReadWrite),
-    }),);
+    }));
 // clang-format on
 #undef CASE
 
@@ -176,13 +178,13 @@ TEST_P(OpTypePipeTest, AnyAccessQualifier) {
 
 // clang-format off
 #define CASE(NAME) {SpvAccessQualifier##NAME, #NAME}
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     TextToBinaryTypePipe, OpTypePipeTest,
     ::testing::ValuesIn(std::vector<EnumCase<SpvAccessQualifier>>{
                             CASE(ReadOnly),
                             CASE(WriteOnly),
                             CASE(ReadWrite),
-    }),);
+    }));
 #undef CASE
 // clang-format on
 

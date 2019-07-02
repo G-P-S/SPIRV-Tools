@@ -15,10 +15,10 @@
 #ifndef SOURCE_OPCODE_H_
 #define SOURCE_OPCODE_H_
 
-#include "instruction.h"
-#include "latest_version_spirv_header.h"
+#include "source/instruction.h"
+#include "source/latest_version_spirv_header.h"
+#include "source/table.h"
 #include "spirv-tools/libspirv.h"
-#include "table.h"
 
 // Returns the name of a registered SPIR-V generator as a null-terminated
 // string. If the generator is not known, then returns the string "Unknown".
@@ -100,6 +100,10 @@ bool spvOpcodeIsDecoration(const SpvOp opcode);
 // function only considers core instructions.
 bool spvOpcodeIsLoad(const SpvOp opcode);
 
+// Returns true if the opcode is an atomic operation that uses the original
+// value.
+bool spvOpcodeIsAtomicWithLoad(const SpvOp opcode);
+
 // Returns true if the opcode is an atomic operation.
 bool spvOpcodeIsAtomicOp(const SpvOp opcode);
 
@@ -125,4 +129,12 @@ bool spvOpcodeIsNonUniformGroupOperation(SpvOp opcode);
 // Returns true if the opcode with vector inputs could be divided into a series
 // of independent scalar operations that would give the same result.
 bool spvOpcodeIsScalarizable(SpvOp opcode);
+
+// Returns true if the given opcode is a debug instruction.
+bool spvOpcodeIsDebug(SpvOp opcode);
+
+// Returns a vector containing the indices of the memory semantics <id>
+// operands for |opcode|.
+std::vector<uint32_t> spvOpcodeMemorySemanticsOperandIndices(SpvOp opcode);
+
 #endif  // SOURCE_OPCODE_H_

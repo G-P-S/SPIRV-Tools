@@ -15,9 +15,11 @@
 #ifndef SOURCE_OPT_LOCAL_REDUNDANCY_ELIMINATION_H_
 #define SOURCE_OPT_LOCAL_REDUNDANCY_ELIMINATION_H_
 
-#include "ir_context.h"
-#include "pass.h"
-#include "value_number_table.h"
+#include <map>
+
+#include "source/opt/ir_context.h"
+#include "source/opt/pass.h"
+#include "source/opt/value_number_table.h"
 
 namespace spvtools {
 namespace opt {
@@ -39,7 +41,8 @@ class LocalRedundancyEliminationPass : public Pass {
            IRContext::kAnalysisInstrToBlockMapping |
            IRContext::kAnalysisDecorations | IRContext::kAnalysisCombinators |
            IRContext::kAnalysisCFG | IRContext::kAnalysisDominatorAnalysis |
-           IRContext::kAnalysisNameMap;
+           IRContext::kAnalysisNameMap | IRContext::kAnalysisConstants |
+           IRContext::kAnalysisTypes;
   }
 
  protected:

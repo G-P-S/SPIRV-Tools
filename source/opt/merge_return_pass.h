@@ -15,12 +15,13 @@
 #ifndef SOURCE_OPT_MERGE_RETURN_PASS_H_
 #define SOURCE_OPT_MERGE_RETURN_PASS_H_
 
-#include "basic_block.h"
-#include "function.h"
-#include "mem_pass.h"
-
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+#include "source/opt/basic_block.h"
+#include "source/opt/function.h"
+#include "source/opt/mem_pass.h"
 
 namespace spvtools {
 namespace opt {
@@ -29,13 +30,13 @@ namespace opt {
  *
  * Handling Structured Control Flow:
  *
- * Structured control flow guarantees that the CFG will reconverge at a given
+ * Structured control flow guarantees that the CFG will converge at a given
  * point (the merge block). Within structured control flow, all blocks must be
  * post-dominated by the merge block, except return blocks and break blocks.
  * A break block is a block that branches to the innermost loop's merge block.
  *
  * Beyond this, we further assume that all unreachable blocks have been
- * cleanedup.  This means that the only unreachable blocks are those necessary
+ * cleaned up.  This means that the only unreachable blocks are those necessary
  * for valid structured control flow.
  *
  * Algorithm:
@@ -45,14 +46,13 @@ namespace opt {
  * with a branch. If current block is not within structured control flow, this
  * is the final return. This block should branch to the new return block (its
  * direct successor). If the current block is within structured control flow,
- * the branch destination should be the innermost loop's merge (if it exists)
- * or the merge block of the immediate structured control flow. If the merge
- * block produces any live values it will need to be predicated. While the merge
- * is nested in structured control flow, the predication path should branch to
- * the next best merge block available. Once structured control flow has been
- * exited, remaining blocks must be predicated with new structured control flow
- * (OpSelectionMerge). These should be nested correctly in case of straight line
- * branching to reach the final return block.
+ * the branch destination should be the innermost loop's merge.  This loop will
+ * always exist because a dummy loop is added around the entire function.
+ * If the merge block produces any live values it will need to be predicated.
+ * While the merge is nested in structured control flow, the predication path
+ *should branch to the merge block of the inner-most loop it is contained in.
+ *Once structured control flow has been exited, it will be at the merge of the
+ *dummy loop, with will simply return.
  *
  * In the final return block, the return value should be loaded and returned.
  * Memory promotion passes should be able to promote the newly introduced
@@ -64,31 +64,29 @@ namespace opt {
  * that block produces value live beyond it). This needs to be done carefully.
  * The merge block should be split into multiple blocks.
  *
- *          1 (header)
+ *          1 (loop header)
  *        /   \
  * (ret) 2     3 (merge)
  *
  *         ||
  *         \/
  *
- *          1 (header)
- *        /   \
- *       2     |
- *        \   /
- *          3 (merge for 1, new header)
- *        /   \
- *       |     3 (old body)
- *        \   /
- *    (ret) 4 (new merge)
+ *          0 (dummy loop header)
+ *          |
+ *          1 (loop header)
+ *         / \
+ *        2  | (merge)
+ *        \ /
+ *         3' (merge)
+ *        / \
+ *        |  3 (original code in 3)
+ *        \ /
+ *   (ret) 4 (dummy loop merge)
  *
  * In the above (simple) example, the return originally in |2| is passed through
  * the merge. That merge is predicated such that the old body of the block is
  * the else branch. The branch condition is based on the value of the "has
- * returned" variable. In more complicated examples (blocks between |1| and
- * |3|), the SSA would need to fixed up due the newly reconvergent path at the
- * merge for |1|. Assuming |3| originally was also a return block, the old body
- * of |3| should also store the return value for that case. The return value in
- * |4| just requires loading the return value variable.
+ * returned" variable.
  *
  ******************************************************************************/
 
@@ -106,8 +104,7 @@ class MergeReturnPass : public MemPass {
   Status Process() override;
 
   IRContext::Analysis GetPreservedAnalyses() override {
-    // return IRContext::kAnalysisDefUse;
-    return IRContext::kAnalysisNone;
+    return IRContext::kAnalysisConstants | IRContext::kAnalysisTypes;
   }
 
  private:
@@ -166,7 +163,7 @@ class MergeReturnPass : public MemPass {
   // statement.  It is assumed that |function| has structured control flow, and
   // that |return_blocks| is a list of all of the basic blocks in |function|
   // that have a return.
-  void ProcessStructured(Function* function,
+  bool ProcessStructured(Function* function,
                          const std::vector<BasicBlock*>& return_blocks);
 
   // Changes an OpReturn* or OpUnreachable instruction at the end of |block|
@@ -208,24 +205,32 @@ class MergeReturnPass : public MemPass {
   // |AddReturnFlag| and |AddReturnValue| must have already been called.
   void BranchToBlock(BasicBlock* block, uint32_t target);
 
-  // Returns true if we need to pridicate |block| where |tail_block| is the
-  // merge point.  (See |PredicateBlocks|).  There is no need to predicate if
-  // there is no code that could be executed.
-  bool RequiresPredication(const BasicBlock* block,
-                           const BasicBlock* tail_block) const;
+  // For every basic block that is reachable from |return_block|, extra code is
+  // added to jump around any code that should not be executed because the
+  // original code would have already returned. This involves adding new
+  // selections constructs to jump around these instructions.
+  //
+  // If new blocks that are created will be added to |order|.  This way a call
+  // can traverse these new block in structured order.
+  //
+  // Returns true if successful.
+  bool PredicateBlocks(BasicBlock* return_block,
+                       std::unordered_set<BasicBlock*>* pSet,
+                       std::list<BasicBlock*>* order);
 
-  // For every basic block that is reachable from a basic block in
-  // |return_blocks|, extra code is added to jump around any code that should
-  // not be executed because the original code would have already returned. This
-  // involves adding new selections constructs to jump around these
-  // instructions.
-  void PredicateBlocks(const std::vector<BasicBlock*>& return_blocks);
-
-  // Add the predication code (see |PredicateBlocks|) to |tail_block| if it
-  // requires predication.  |tail_block| and any new blocks that are known to
-  // not require predication will be added to |predicated|.
-  void PredicateBlock(BasicBlock* block, BasicBlock* tail_block,
-                      std::unordered_set<BasicBlock*>* predicated);
+  // Add a conditional branch at the start of |block| that either jumps to
+  // the merge block of |loop_merge_inst| or the original code in |block|
+  // depending on the value in |return_flag_|.  The continue target in
+  // |loop_merge_inst| will be updated if needed.
+  //
+  // If new blocks that are created will be added to |order|.  This way a call
+  // can traverse these new block in structured order.
+  //
+  // Returns true if successful.
+  bool BreakFromConstruct(BasicBlock* block,
+                          std::unordered_set<BasicBlock*>* predicated,
+                          std::list<BasicBlock*>* order,
+                          Instruction* loop_merge_inst);
 
   // Add an |OpReturn| or |OpReturnValue| to the end of |block|.  If an
   // |OpReturnValue| is needed, the return value is loaded from |return_value_|.
@@ -235,12 +240,11 @@ class MergeReturnPass : public MemPass {
   // return block at the end of the pass.
   void CreateReturnBlock();
 
-  // Creates a Phi node in |merge_block| for the result of |inst| coming from
-  // |predecessor|.  Any uses of the result of |inst| that are no longer
+  // Creates a Phi node in |merge_block| for the result of |inst|.
+  // Any uses of the result of |inst| that are no longer
   // dominated by |inst|, are replaced with the result of the new |OpPhi|
   // instruction.
-  void CreatePhiNodesForInst(BasicBlock* merge_block, uint32_t predecessor,
-                             Instruction& inst);
+  void CreatePhiNodesForInst(BasicBlock* merge_block, Instruction& inst);
 
   // Traverse the nodes in |new_merge_nodes_|, and adds the OpPhi instructions
   // that are needed to make the code correct.  It is assumed that at this point
@@ -268,7 +272,34 @@ class MergeReturnPass : public MemPass {
     }
   }
 
+  // Modifies existing OpPhi instruction in |target| block to account for the
+  // new edge from |new_source|.  The value for that edge will be an Undef. If
+  // |target| only had a single predecessor, then it is marked as needing new
+  // phi nodes.  See |MarkForNewPhiNodes|.
+  //
+  // The CFG must not include the edge from |new_source| to |target| yet.
+  void UpdatePhiNodes(BasicBlock* new_source, BasicBlock* target);
+
   StructuredControlState& CurrentState() { return state_.back(); }
+
+  // Inserts |new_element| into |list| after the first occurrence of |element|.
+  // |element| must be in |list| at least once.
+  void InsertAfterElement(BasicBlock* element, BasicBlock* new_element,
+                          std::list<BasicBlock*>* list);
+
+  // Creates a single iteration loop around all of the exectuable code of the
+  // current function and returns after the loop is done. Sets
+  // |final_return_block_|.
+  void AddDummyLoopAroundFunction();
+
+  // Creates a new basic block that branches to |header_label_id|.  Returns the
+  // new basic block.  The block will be the second last basic block in the
+  // function.
+  BasicBlock* CreateContinueTarget(uint32_t header_label_id);
+
+  // Creates a loop around the executable code of the function with
+  // |merge_target| as the merge node.
+  void CreateDummyLoop(BasicBlock* merge_target);
 
   // A stack used to keep track of the innermost contain loop and selection
   // constructs.
@@ -292,11 +323,18 @@ class MergeReturnPass : public MemPass {
   // The basic block that is suppose to become the contain the only return value
   // after processing the current function.
   BasicBlock* final_return_block_;
+
   // This map contains the set of nodes that use to have a single predcessor,
   // but now have more.  They will need new OpPhi nodes.  For each of the nodes,
   // it is mapped to it original single predcessor.  It is assumed there are no
   // values that will need a phi on the new edges.
   std::unordered_map<BasicBlock*, BasicBlock*> new_merge_nodes_;
+  bool HasNontrivialUnreachableBlocks(Function* function);
+
+  // Contains all return blocks that are merged. This is set is populated while
+  // processing structured blocks and used to properly construct OpPhi
+  // instructions.
+  std::unordered_set<uint32_t> return_blocks_;
 };
 
 }  // namespace opt

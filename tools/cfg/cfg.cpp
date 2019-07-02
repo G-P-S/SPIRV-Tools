@@ -19,9 +19,8 @@
 #include <vector>
 
 #include "spirv-tools/libspirv.h"
+#include "tools/cfg/bin_to_dot.h"
 #include "tools/io.h"
-
-#include "bin_to_dot.h"
 
 // Prints a program usage message to stdout.
 static void print_usage(const char* argv0) {
@@ -45,7 +44,7 @@ Options:
       argv0, argv0);
 }
 
-static const auto kDefaultEnvironment = SPV_ENV_UNIVERSAL_1_2;
+static const auto kDefaultEnvironment = SPV_ENV_UNIVERSAL_1_4;
 
 int main(int argc, char** argv) {
   const char* inFile = nullptr;

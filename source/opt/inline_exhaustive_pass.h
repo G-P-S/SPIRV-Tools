@@ -23,9 +23,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "def_use_manager.h"
-#include "inline_pass.h"
-#include "module.h"
+#include "source/opt/def_use_manager.h"
+#include "source/opt/inline_pass.h"
+#include "source/opt/module.h"
 
 namespace spvtools {
 namespace opt {
@@ -40,8 +40,8 @@ class InlineExhaustivePass : public InlinePass {
 
  private:
   // Exhaustively inline all function calls in func as well as in
-  // all code that is inlined into func. Return true if func is modified.
-  bool InlineExhaustive(Function* func);
+  // all code that is inlined into func. Returns the status.
+  Status InlineExhaustive(Function* func);
 
   void Initialize();
   Pass::Status ProcessImpl();

@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "eliminate_dead_functions_pass.h"
-#include "ir_context.h"
+#include "source/opt/eliminate_dead_functions_pass.h"
+#include "source/opt/eliminate_dead_functions_util.h"
 
 #include <unordered_set>
+
+#include "source/opt/ir_context.h"
 
 namespace spvtools {
 namespace opt {
@@ -28,15 +30,15 @@ Pass::Status EliminateDeadFunctionsPass::Process() {
     live_function_set.insert(fp);
     return false;
   };
-  ProcessReachableCallTree(mark_live, context());
+  context()->ProcessReachableCallTree(mark_live);
 
   bool modified = false;
   for (auto funcIter = get_module()->begin();
        funcIter != get_module()->end();) {
     if (live_function_set.count(&*funcIter) == 0) {
       modified = true;
-      EliminateFunction(&*funcIter);
-      funcIter = funcIter.Erase();
+      funcIter =
+          eliminatedeadfunctionsutil::EliminateFunction(context(), &funcIter);
     } else {
       ++funcIter;
     }
@@ -46,10 +48,5 @@ Pass::Status EliminateDeadFunctionsPass::Process() {
                   : Pass::Status::SuccessWithoutChange;
 }
 
-void EliminateDeadFunctionsPass::EliminateFunction(Function* func) {
-  // Remove all of the instruction in the function body
-  func->ForEachInst([this](Instruction* inst) { context()->KillInst(inst); },
-                    true);
-}
 }  // namespace opt
 }  // namespace spvtools

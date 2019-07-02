@@ -14,13 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "local_single_block_elim_pass.h"
+#include "source/opt/local_single_block_elim_pass.h"
 
-#include "iterator.h"
+#include <vector>
+
+#include "source/opt/iterator.h"
 
 namespace spvtools {
 namespace opt {
-
 namespace {
 
 const uint32_t kStoreValIdInIdx = 1;
@@ -77,6 +78,7 @@ bool LocalSingleBlockLoadStoreElimPass::LocalSingleBlockLoadStoreElim(
             if (prev_store != var2store_.end() &&
                 instructions_to_save.count(prev_store->second) == 0) {
               instructions_to_kill.push_back(prev_store->second);
+              modified = true;
             }
 
             bool kill_store = false;
@@ -185,6 +187,7 @@ Pass::Status LocalSingleBlockLoadStoreElimPass::ProcessImpl() {
   // Assumes relaxed logical addressing only (see instruction.h).
   if (context()->get_feature_mgr()->HasCapability(SpvCapabilityAddresses))
     return Status::SuccessWithoutChange;
+
   // Do not process if module contains OpGroupDecorate. Additional
   // support required in KillNamesAndDecorates().
   // TODO(greg-lunarg): Add support for OpGroupDecorate
@@ -198,7 +201,7 @@ Pass::Status LocalSingleBlockLoadStoreElimPass::ProcessImpl() {
     return LocalSingleBlockLoadStoreElim(fp);
   };
 
-  bool modified = ProcessEntryPointCallTree(pfn, get_module());
+  bool modified = context()->ProcessEntryPointCallTree(pfn);
   return modified ? Status::SuccessWithChange : Status::SuccessWithoutChange;
 }
 
@@ -231,8 +234,7 @@ void LocalSingleBlockLoadStoreElimPass::InitExtensions() {
       "SPV_NV_geometry_shader_passthrough",
       "SPV_AMD_texture_gather_bias_lod",
       "SPV_KHR_storage_buffer_storage_class",
-      // SPV_KHR_variable_pointers
-      //   Currently do not support extended pointer expressions
+      "SPV_KHR_variable_pointers",
       "SPV_AMD_gpu_shader_int16",
       "SPV_KHR_post_depth_coverage",
       "SPV_KHR_shader_atomic_counter_ops",
@@ -244,8 +246,16 @@ void LocalSingleBlockLoadStoreElimPass::InitExtensions() {
       "SPV_AMD_gpu_shader_half_float_fetch",
       "SPV_GOOGLE_decorate_string",
       "SPV_GOOGLE_hlsl_functionality1",
+      "SPV_GOOGLE_user_type",
       "SPV_NV_shader_subgroup_partitioned",
       "SPV_EXT_descriptor_indexing",
+      "SPV_NV_fragment_shader_barycentric",
+      "SPV_NV_compute_shader_derivatives",
+      "SPV_NV_shader_image_footprint",
+      "SPV_NV_shading_rate",
+      "SPV_NV_mesh_shader",
+      "SPV_NV_ray_tracing",
+      "SPV_EXT_fragment_invocation_density",
   });
 }
 

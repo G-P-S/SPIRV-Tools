@@ -13,18 +13,21 @@
 // limitations under the License.
 
 #include <memory>
+#include <string>
+#include <unordered_map>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
-#include "opt/build_module.h"
-#include "opt/def_use_manager.h"
-#include "opt/ir_context.h"
-#include "opt/module.h"
-#include "pass_fixture.h"
-#include "pass_utils.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "source/opt/build_module.h"
+#include "source/opt/def_use_manager.h"
+#include "source/opt/ir_context.h"
+#include "source/opt/module.h"
 #include "spirv-tools/libspirv.hpp"
+#include "test/opt/pass_fixture.h"
+#include "test/opt/pass_utils.h"
 
 namespace spvtools {
 namespace opt {
@@ -203,7 +206,7 @@ TEST_P(ParseDefUseTest, Case) {
 }
 
 // clang-format off
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     TestCase, ParseDefUseTest,
     ::testing::ValuesIn(std::vector<ParseDefUseCase>{
         {"", {{}, {}}},                              // no instruction
@@ -626,7 +629,7 @@ TEST_P(ReplaceUseTest, Case) {
 }
 
 // clang-format off
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     TestCase, ReplaceUseTest,
     ::testing::ValuesIn(std::vector<ReplaceUseCase>{
       { // no use, no replace request
@@ -978,7 +981,7 @@ TEST_P(KillDefTest, Case) {
 }
 
 // clang-format off
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     TestCase, KillDefTest,
     ::testing::ValuesIn(std::vector<KillDefCase>{
       { // no def, no use, no kill
@@ -1340,7 +1343,7 @@ TEST_P(AnalyzeInstDefUseTest, Case) {
 }
 
 // clang-format off
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     TestCase, AnalyzeInstDefUseTest,
     ::testing::ValuesIn(std::vector<AnalyzeInstDefUseTestCase>{
       { // A type declaring instruction.
@@ -1461,7 +1464,7 @@ TEST_P(KillInstTest, Case) {
 }
 
 // clang-format off
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     TestCase, KillInstTest,
     ::testing::ValuesIn(std::vector<KillInstTestCase>{
       // Kill id defining instructions.
@@ -1585,7 +1588,7 @@ TEST_P(GetAnnotationsTest, Case) {
 }
 
 // clang-format off
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     TestCase, GetAnnotationsTest,
     ::testing::ValuesIn(std::vector<GetAnnotationsTestCase>{
       // empty

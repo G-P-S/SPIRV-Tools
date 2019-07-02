@@ -14,14 +14,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "dead_insert_elim_pass.h"
+#include "source/opt/dead_insert_elim_pass.h"
 
-#include "composite.h"
-#include "ir_context.h"
-#include "iterator.h"
+#include "source/opt/composite.h"
+#include "source/opt/ir_context.h"
+#include "source/opt/iterator.h"
 #include "spirv/1.2/GLSL.std.450.h"
-
-#include <vector>
 
 namespace spvtools {
 namespace opt {
@@ -257,7 +255,7 @@ Pass::Status DeadInsertElimPass::Process() {
   ProcessFunction pfn = [this](Function* fp) {
     return EliminateDeadInserts(fp);
   };
-  bool modified = ProcessEntryPointCallTree(pfn, get_module());
+  bool modified = context()->ProcessEntryPointCallTree(pfn);
   return modified ? Status::SuccessWithChange : Status::SuccessWithoutChange;
 }
 

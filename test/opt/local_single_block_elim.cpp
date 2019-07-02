@@ -13,8 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pass_fixture.h"
-#include "pass_utils.h"
+#include <string>
+
+#include "test/opt/pass_fixture.h"
+#include "test/opt/pass_utils.h"
 
 namespace spvtools {
 namespace opt {
@@ -863,7 +865,9 @@ OpReturn
 OpFunctionEnd
 )";
 
+  // Relax logical pointers to allow pointer allocations.
   SetAssembleOptions(SPV_TEXT_TO_BINARY_OPTION_PRESERVE_NUMERIC_IDS);
+  ValidatorOptions()->relax_logical_pointer = true;
   SinglePassRunAndCheck<LocalSingleBlockLoadStoreElimPass>(before, after, true,
                                                            true);
 }
@@ -980,6 +984,139 @@ OpFunctionEnd
   SetAssembleOptions(SPV_TEXT_TO_BINARY_OPTION_PRESERVE_NUMERIC_IDS);
   SinglePassRunAndCheck<LocalSingleBlockLoadStoreElimPass>(
       predefs_before + before, predefs_before + after, true, true);
+}
+
+// Test that that an unused OpAccessChain between two store does does not
+// hinders the removal of the first store.  We need to check this because
+// local-access-chain-convert does always remove the OpAccessChain instructions
+// that become dead.
+
+TEST_F(LocalSingleBlockLoadStoreElimTest,
+       StoreElimIfInterveningUnusedAccessChain) {
+  const std::string predefs =
+      R"(OpCapability Shader
+%1 = OpExtInstImport "GLSL.std.450"
+OpMemoryModel Logical GLSL450
+OpEntryPoint Fragment %main "main" %BaseColor0 %Idx %BaseColor1 %OutColor
+OpExecutionMode %main OriginUpperLeft
+OpSource GLSL 450
+OpName %main "main"
+OpName %v "v"
+OpName %BaseColor0 "BaseColor0"
+OpName %Idx "Idx"
+OpName %BaseColor1 "BaseColor1"
+OpName %OutColor "OutColor"
+OpDecorate %BaseColor0 Location 0
+OpDecorate %Idx Flat
+OpDecorate %Idx Location 2
+OpDecorate %BaseColor1 Location 1
+OpDecorate %OutColor Location 0
+%void = OpTypeVoid
+%10 = OpTypeFunction %void
+%float = OpTypeFloat 32
+%v4float = OpTypeVector %float 4
+%_ptr_Function_v4float = OpTypePointer Function %v4float
+%_ptr_Input_v4float = OpTypePointer Input %v4float
+%BaseColor0 = OpVariable %_ptr_Input_v4float Input
+%_ptr_Function_float = OpTypePointer Function %float
+%int = OpTypeInt 32 1
+%_ptr_Input_int = OpTypePointer Input %int
+%Idx = OpVariable %_ptr_Input_int Input
+%BaseColor1 = OpVariable %_ptr_Input_v4float Input
+%float_0_100000001 = OpConstant %float 0.100000001
+%19 = OpConstantComposite %v4float %float_0_100000001 %float_0_100000001 %float_0_100000001 %float_0_100000001
+%_ptr_Output_v4float = OpTypePointer Output %v4float
+%OutColor = OpVariable %_ptr_Output_v4float Output
+)";
+
+  const std::string before =
+      R"(%main = OpFunction %void None %10
+%21 = OpLabel
+%v = OpVariable %_ptr_Function_v4float Function
+%22 = OpLoad %v4float %BaseColor0
+OpStore %v %22
+%23 = OpLoad %int %Idx
+%24 = OpAccessChain %_ptr_Function_float %v %23
+%26 = OpLoad %v4float %BaseColor1
+%27 = OpFAdd %v4float %26 %19
+OpStore %v %27
+OpReturn
+OpFunctionEnd
+)";
+
+  const std::string after =
+      R"(%main = OpFunction %void None %10
+%21 = OpLabel
+%v = OpVariable %_ptr_Function_v4float Function
+%22 = OpLoad %v4float %BaseColor0
+%23 = OpLoad %int %Idx
+%24 = OpAccessChain %_ptr_Function_float %v %23
+%26 = OpLoad %v4float %BaseColor1
+%27 = OpFAdd %v4float %26 %19
+OpStore %v %27
+OpReturn
+OpFunctionEnd
+)";
+
+  SetAssembleOptions(SPV_TEXT_TO_BINARY_OPTION_PRESERVE_NUMERIC_IDS);
+  SinglePassRunAndCheck<LocalSingleBlockLoadStoreElimPass>(
+      predefs + before, predefs + after, true, true);
+}
+
+TEST_F(LocalSingleBlockLoadStoreElimTest, VariablePointerTest) {
+  // Check that the load of the first variable is still used and that the load
+  // of the third variable is propagated.  The first load has to remain because
+  // of the store to the variable pointer.
+  const std::string text = R"(
+; CHECK: [[v1:%\w+]] = OpVariable
+; CHECK: [[v2:%\w+]] = OpVariable
+; CHECK: [[v3:%\w+]] = OpVariable
+; CHECK: [[phi:%\w+]] = OpPhi
+; CHECK: [[ld1:%\w+]] = OpLoad %int [[v1]]
+; CHECK: OpIAdd %int [[ld1]] %int_0
+               OpCapability Shader
+               OpCapability VariablePointers
+          %1 = OpExtInstImport "GLSL.std.450"
+               OpMemoryModel Logical GLSL450
+               OpEntryPoint GLCompute %2 "main"
+               OpExecutionMode %2 LocalSize 1 1 1
+               OpSource GLSL 450
+               OpMemberDecorate %_struct_3 0 Offset 0
+               OpMemberDecorate %_struct_3 1 Offset 4
+       %void = OpTypeVoid
+          %5 = OpTypeFunction %void
+        %int = OpTypeInt 32 1
+       %bool = OpTypeBool
+  %_struct_3 = OpTypeStruct %int %int
+%_ptr_Function__struct_3 = OpTypePointer Function %_struct_3
+%_ptr_Function_int = OpTypePointer Function %int
+       %true = OpConstantTrue %bool
+      %int_0 = OpConstant %int 0
+      %int_1 = OpConstant %int 1
+         %13 = OpConstantNull %_struct_3
+          %2 = OpFunction %void None %5
+         %14 = OpLabel
+         %15 = OpVariable %_ptr_Function_int Function
+         %16 = OpVariable %_ptr_Function_int Function
+         %17 = OpVariable %_ptr_Function_int Function
+               OpSelectionMerge %18 None
+               OpBranchConditional %true %19 %20
+         %19 = OpLabel
+               OpBranch %18
+         %20 = OpLabel
+               OpBranch %18
+         %18 = OpLabel
+         %21 = OpPhi %_ptr_Function_int %15 %19 %16 %20
+               OpStore %15 %int_1
+               OpStore %21 %int_0
+         %22 = OpLoad %int %15
+               OpStore %17 %int_0
+         %23 = OpLoad %int %17
+         %24 = OpIAdd %int %22 %23
+               OpReturn
+               OpFunctionEnd
+  )";
+  SinglePassRunAndMatch<LocalSingleBlockLoadStoreElimPass>(text, false);
 }
 // TODO(greg-lunarg): Add tests to verify handling of these cases:
 //

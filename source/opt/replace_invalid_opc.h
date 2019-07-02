@@ -15,7 +15,9 @@
 #ifndef SOURCE_OPT_REPLACE_INVALID_OPC_H_
 #define SOURCE_OPT_REPLACE_INVALID_OPC_H_
 
-#include "pass.h"
+#include <string>
+
+#include "source/opt/pass.h"
 
 namespace spvtools {
 namespace opt {
@@ -26,7 +28,7 @@ namespace opt {
 // value, the instruction will simply be deleted.
 class ReplaceInvalidOpcodePass : public Pass {
  public:
-  const char* name() const override { return "replace-invalid-opcodes"; }
+  const char* name() const override { return "replace-invalid-opcode"; }
   Status Process() override;
 
  private:
